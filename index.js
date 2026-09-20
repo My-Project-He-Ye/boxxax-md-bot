@@ -46,6 +46,14 @@ let cooldownUntil = 0;     // 401 block ke baad WhatsApp temp-block khatam hone 
 let blockCount = 0;        // 401 blocks ki ginti — har block par cooldown double
 let lastCloseAt = 0;
 let failStreak = 0;        // lagatar quick closes (reconnect storm guard)
+let socketOpenedAt = 0;    // WS kab se musalsal open hai — pairing ke liye stability gate
+
+// Har second WS ki asal haalat note karo (Baileys 'open' unpaired socket par
+// kabhi fire nahi hota, is liye ws.isOpen hi sab se saccha signal hai).
+setInterval(() => {
+  if (sock?.ws?.isOpen) { if (!socketOpenedAt) socketOpenedAt = Date.now(); }
+  else socketOpenedAt = 0;
+}, 1000);
 
 // Logout endpoint ki hifazat ke liye random admin token (sirf server logs mein)
 const ADMIN_TOKEN = crypto.randomBytes(16).toString('hex');
@@ -105,6 +113,13 @@ async function connectWA() {
           cooldownUntil = now + mins * 60 * 1000;
           log.warn(`[wa] 401 block #${blockCount} — ${mins} min cooldown. Us se pehle pair mat karein.`);
           setTimeout(() => { if (Date.now() >= cooldownUntil - 1000) connectWA(); }, mins * 60 * 1000 + 5000);
+        } else if (Date.now() < cooldownUntil) {
+          // Cooldown ke dauran socket ko bilkul haath mat lagao — WhatsApp
+          // dobara connect dekh kar block LAMBA kar sakta hai. Sirf cooldown
+          // khatam hone par ek baar reconnect karo.
+          const wait = cooldownUntil - Date.now() + 5000;
+          log.warn(`[wa] cooldown active — reconnect ${Math.ceil(wait / 60000)} min baad`);
+          setTimeout(() => { if (Date.now() >= cooldownUntil - 1000) connectWA(); }, wait);
         } else {
           // Unpaired socket ka idle-close (408) normal hai — lekin code issue
           // ke foran baad ya lagatar failures par WhatsApp ko spam mat karo.
@@ -136,7 +151,8 @@ async function waitForOpenSocket(timeoutMs = 25000) {
   const t0 = Date.now();
   while (Date.now() - t0 < timeoutMs) {
     if (sock?.ws?.isOpen) return sock;
-    if (!sock && !starting) connectWA();
+    // Cooldown mein reconnect bilkul nahi — warna block lamba hota hai.
+    if (!sock && !starting && Date.now() >= cooldownUntil) connectWA();
     await new Promise((r) => setTimeout(r, 1000));
   }
   return sock?.ws?.isOpen ? sock : null;
@@ -159,6 +175,7 @@ app.get('/api/status', (req, res) => {
     canPair: !connected && !cd.coolingDown,
     cooldownSeconds: cd.cooldownSeconds,
     socketLive: !!(sock?.ws?.isOpen),
+    socketStable: !!(sock?.ws?.isOpen && socketOpenedAt && Date.now() - socketOpenedAt >= 10000),
   });
 });
 
@@ -189,15 +206,33 @@ app.post('/api/pair', async (req, res) => {
       });
     }
 
-    // 45 second ke andar dobara click — pehla code abhi valid hai, wahi do
-    if (lastPairingCode && now - lastCodeAt < 45000) {
+    // 90 second ke andar dobara click — pehla code abhi valid hai, wahi do
+    // (code 75 second chalta hai; is dauran naya code = naya 401 khatra)
+    if (lastPairingCode && now - lastCodeAt < 90000) {
       return res.json({ code: lastPairingCode, reused: true, expiresIn: 75 });
     }
 
-    if (!sock) connectWA();
+    if (!sock && !starting && Date.now() >= cooldownUntil) connectWA();
     const ready = await waitForOpenSocket(25000);
     if (!ready) {
-      return res.status(503).json({ error: 'WhatsApp link abhi tayar nahi ho saka — 10 second ruk kar dobara dabayein.' });
+      return res.status(503).json({ error: 'WhatsApp link abhi tayar nahi ho saka — 15 second ruk kar dobara dabayein (button ko baar-baar mat dabayein).' });
+    }
+
+    // STABILITY GATE (v2.2): socket kam-se-kam 10 second se musalsal open ho —
+    // flapping socket par code issue karne se phone par "could not link" aata
+    // hai aur WhatsApp 401 block laga deta hai. Yahi pichli baar hua tha.
+    {
+      const t1 = Date.now();
+      let stable = false;
+      while (Date.now() - t1 < 30000) {
+        const sf = socketOpenedAt ? Date.now() - socketOpenedAt : 0;
+        if (sock?.ws?.isOpen && sf >= 10000) { stable = true; break; }
+        if (!sock?.ws?.isOpen) break;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      if (!stable) {
+        return res.status(503).json({ error: 'WhatsApp link abhi stable nahi — 15 second ruk kar dobara dabayein (button ko baar-baar mat dabayein).' });
+      }
     }
 
     if (authState?.creds?.registered) return res.json({ alreadyConnected: true });
@@ -231,23 +266,30 @@ app.post('/api/logout', async (req, res) => {
 app.get('/api/health', (req, res) => res.json({ ok: true, bot: config.botName }));
 
 // --- boot ----------------------------------------------------
-// Restart ke baad bhi pichli 401 block ka cooldown lagu rahe:
-// bot.log mein aakhri "Logged out" ka waqt nikalo aur 20 min cooldown lagao.
+// Restart ke baad bhi pichli 401 block ka cooldown + blockCount lagu rahe.
+// v2.2: naya format "[wa] 401 block #2 — 40 min cooldown" parse karo (purana
+// format bhi support). Agar ye seed na ho to restart ke baad bot cooldown
+// bhool kar foran pair karwayega = agla 401 block DOUBLE (80 min)!
 try {
   const logTxt = fs.readFileSync(path.join(__dirname, 'bot.log'), 'utf8');
   const lines = logTxt.trim().split('\n');
   for (let i = lines.length - 1; i >= 0; i--) {
     try {
       const o = JSON.parse(lines[i]);
-      if (o && o.msg === '[wa] Logged out — session cleared. Pair dobara karein.' && o.time) {
-        blockCount = 1;
+      if (!o || !o.msg || !o.time) continue;
+      const m = /401 block #(\d+)\D+(\d+) min cooldown/.exec(o.msg);
+      if (m) {
+        blockCount = Math.max(blockCount, parseInt(m[1], 10));
+        cooldownUntil = Math.max(cooldownUntil, o.time + parseInt(m[2], 10) * 60 * 1000);
+      } else if (o.msg === '[wa] Logged out — session cleared. Pair dobara karein.') {
+        blockCount = Math.max(blockCount, 1);
         cooldownUntil = Math.max(cooldownUntil, o.time + 20 * 60 * 1000);
-        if (cooldownUntil > Date.now()) {
-          log.warn(`[wa] pichli 401 block — cooldown ${new Date(cooldownUntil).toLocaleString()} tak`);
-          setTimeout(() => { if (Date.now() >= cooldownUntil - 1000) connectWA(); }, cooldownUntil - Date.now() + 5000);
-        }
-        break;
+      } else continue;
+      if (cooldownUntil > Date.now()) {
+        log.warn(`[wa] pichli 401 block #${blockCount} — cooldown ${new Date(cooldownUntil).toLocaleString()} tak`);
+        setTimeout(() => { if (Date.now() >= cooldownUntil - 1000) connectWA(); }, cooldownUntil - Date.now() + 5000);
       }
+      break;
     } catch {}
   }
 } catch {}
