@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOXXAXMD · WhatsApp Bot Pairing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#001619; --card:#062529; --cyan:#50E8F4; --mint:#6DD5C4;
+    --lc:#C7F8FE; --sm:#DFF6F0; --txt:#EAF7F8; --mut:#7FA3A7;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg); color:var(--txt);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:20px; overflow-x:hidden;
+  }
+  .orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.35;pointer-events:none;animation:drift 14s ease-in-out infinite alternate}
+  .orb.a{width:420px;height:420px;background:#0e7d8a;top:-120px;left:-120px}
+  .orb.b{width:360px;height:360px;background:#134b3f;bottom:-120px;right:-100px;animation-delay:-7s}
+  @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(60px,40px) scale(1.15)}}
+  .card{
+    position:relative; z-index:1;
+    background:rgba(6,37,41,.82); border:1px solid rgba(80,232,244,.25);
+    border-radius:24px; padding:36px 32px; max-width:460px; width:100%;
+    box-shadow:0 0 70px rgba(80,232,244,.12), inset 0 1px 0 rgba(199,248,254,.08);
+    backdrop-filter:blur(12px); animation:rise .6s ease both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  .logo{width:64px;height:64px;margin:0 auto 14px;border-radius:20px;display:flex;align-items:center;justify-content:center;
+    font-size:32px;background:linear-gradient(135deg,rgba(80,232,244,.25),rgba(109,213,196,.12));
+    border:1px solid rgba(80,232,244,.4);box-shadow:0 0 30px rgba(80,232,244,.25)}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:30px;text-align:center;letter-spacing:.5px}
+  h1 span{background:linear-gradient(135deg,var(--cyan),var(--mint));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{text-align:center;color:var(--mut);font-size:14px;margin:6px 0 20px;line-height:1.6}
+  .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:22px}
+  .chip{font-size:12px;color:var(--lc);background:rgba(80,232,244,.08);border:1px solid rgba(80,232,244,.22);
+    padding:6px 12px;border-radius:999px}
+  .status{display:flex;align-items:center;gap:10px;justify-content:center;font-size:14px;margin-bottom:20px;
+    padding:12px;border-radius:14px;background:rgba(80,232,244,.06);border:1px solid rgba(80,232,244,.14)}
+  .dot{width:10px;height:10px;border-radius:50%;background:#ffb020;box-shadow:0 0 10px #ffb020;animation:pulse 1.6s infinite}
+  .dot.on{background:#3dff88;box-shadow:0 0 10px #3dff88;animation:none}
+  @keyframes pulse{50%{opacity:.4}}
+  label{font-size:13px;color:var(--mut);display:block;margin-bottom:8px}
+  input{width:100%;padding:15px 16px;border-radius:14px;border:1px solid rgba(80,232,244,.3);
+    background:#02181b;color:var(--txt);font-size:17px;letter-spacing:1px;outline:none;margin-bottom:14px;transition:.2s}
+  input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(80,232,244,.15)}
+  button{width:100%;padding:15px;border:none;border-radius:999px;cursor:pointer;
+    background:linear-gradient(135deg,var(--cyan),var(--mint));color:#001619;
+    font-weight:700;font-size:16px;font-family:'Space Grotesk',sans-serif;transition:.2s}
+  button:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(80,232,244,.35)}
+  button:active{transform:none}
+  button:disabled{opacity:.5;cursor:wait;transform:none}
+  .code-box{display:none;text-align:center;margin-top:22px;padding:22px 18px;
+    border:1px dashed rgba(80,232,244,.5);border-radius:16px;background:rgba(80,232,244,.05);animation:rise .4s ease both}
+  .code{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;letter-spacing:12px;color:var(--cyan);
+    margin:10px 0;text-shadow:0 0 24px rgba(80,232,244,.55)}
+  .copy{background:transparent;border:1px solid rgba(80,232,244,.4);color:var(--cyan);
+    font-size:13px;padding:8px 18px;width:auto;margin-top:4px}
+  .steps{text-align:left;font-size:13.5px;color:var(--lc);line-height:2;margin-top:14px;
+    background:rgba(2,24,27,.5);border-radius:12px;padding:14px 16px}
+  .steps b{color:var(--cyan)}
+  .err{display:none;color:#ff9a9a;font-size:13px;margin-top:12px;text-align:center;
+    background:rgba(255,100,100,.08);border:1px solid rgba(255,100,100,.25);border-radius:10px;padding:10px}
+  .logout{background:transparent;border:1px solid rgba(255,138,138,.4);color:#ff8a8a;
+    margin-top:14px;font-size:14px;padding:11px;font-family:'Inter',sans-serif;font-weight:500}
+  .logout:hover{box-shadow:0 6px 20px rgba(255,100,100,.2)}
+  .foot{text-align:center;margin-top:22px;font-size:12px;color:var(--mut)}
+  .foot b{color:var(--cyan)}
+  .warn{margin-top:14px;font-size:12px;color:var(--mut);text-align:center;line-height:1.7;
+    background:rgba(255,176,32,.06);border:1px solid rgba(255,176,32,.2);border-radius:10px;padding:10px 12px}
+</style>
+</head>
+<body>
+<div class="orb a"></div><div class="orb b"></div>
+
+<div class="card">
+  <div class="logo">🤖</div>
+  <h1><span>BOXXAXMD</span></h1>
+  <p class="sub">Apne WhatsApp number se bot link karein —<br>kuch second mein bot <b style="color:var(--cyan)">active</b> ho jayega</p>
+
+  <div class="chips">
+    <span class="chip">⚡ 31 commands</span>
+    <span class="chip">🔗 Pairing code</span>
+    <span class="chip">💾 Session saved</span>
+  </div>
+
+  <div class="status"><span class="dot" id="dot"></span><span id="statusText">Checking...</span></div>
+
+  <div id="pairForm">
+    <label>WhatsApp number (country code ke saath, bina + ke)</label>
+    <input id="number" type="tel" placeholder="923001234567" inputmode="numeric" autocomplete="tel">
+    <button id="pairBtn" onclick="getCode()">Pairing Code Hasil Karein</button>
+    <p class="err" id="err"></p>
+
+    <div class="code-box" id="codeBox">
+      <div style="font-size:13px;color:var(--mut)">Aapka pairing code:</div>
+      <div class="code" id="code">--------</div>
+      <button class="copy" onclick="copyCode()">📋 Copy Code</button>
+      <div class="steps">
+        <b>Code lagane ka tareeqa:</b><br>
+        1️⃣ WhatsApp kholein → <b>⋮ Menu → Linked devices</b><br>
+        2️⃣ <b>Link a device</b> dabayein<br>
+        3️⃣ Neeche <b>"Link with phone number instead"</b> chunein<br>
+        4️⃣ Upar wala <b>8-digit code</b> daal dein ✅
+      </div>
+    </div>
+
+    <div class="warn">⚠️ Ye unofficial tareeqa hai — apne <b>main number</b> ki jagah <b>second number</b> use karna zyada safe hai.</div>
+  </div>
+
+  <div id="connectedBox" style="display:none;text-align:center">
+    <p style="font-size:17px;margin-bottom:6px">✅ <b>Bot active hai!</b></p>
+    <p style="font-size:13px;color:var(--mut)" id="connUser"></p>
+    <p style="font-size:13px;color:var(--mut);margin-top:10px">WhatsApp par <b style="color:var(--cyan)">.menu</b> likh kar commands dekhein.</p>
+    <button class="logout" onclick="logout()">Logout / Dobara Pair Karein</button>
+  </div>
+
+  <p class="foot"><b>BOXXAXMD</b> v2.0 · Apna number, apna bot</p>
+</div>
+
+<script>
+async function refresh(){
+  try{
+    const s = await (await fetch('/api/status')).json();
+    const dot = document.getElementById('dot'), t = document.getElementById('statusText');
+    if(s.connected){
+      dot.classList.add('on'); t.textContent = 'Connected ✓';
+      document.getElementById('pairForm').style.display='none';
+      document.getElementById('connectedBox').style.display='block';
+      document.getElementById('connUser').textContent = 'Linked: ' + (s.user||'');
+    } else {
+      dot.classList.remove('on'); t.textContent = 'Pairing ka intezar...';
+      document.getElementById('pairForm').style.display='block';
+      document.getElementById('connectedBox').style.display='none';
+    }
+  }catch{ document.getElementById('statusText').textContent = 'Server se rabta nahi'; }
+}
+async function getCode(){
+  const btn=document.getElementById('pairBtn'), err=document.getElementById('err');
+  const number=document.getElementById('number').value.trim();
+  err.style.display='none'; btn.disabled=true; btn.textContent='Code mangwa raha hoon...';
+  try{
+    const r = await fetch('/api/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({number})});
+    const j = await r.json();
+    if(j.error) throw new Error(j.error);
+    if(j.alreadyConnected){ refresh(); return; }
+    document.getElementById('code').textContent = j.code;
+    document.getElementById('codeBox').style.display='block';
+  }catch(e){ err.textContent=e.message; err.style.display='block'; }
+  btn.disabled=false; btn.textContent='Pairing Code Hasil Karein';
+}
+function copyCode(){
+  const c=document.getElementById('code').textContent;
+  navigator.clipboard.writeText(c).then(()=>alert('Code copy ho gaya: '+c));
+}
+async function logout(){
+  if(!confirm('Bot ko logout karke dobara pair karna hai?')) return;
+  const token=prompt('Admin token dalein (server logs mein milta hai):');
+  if(!token) return;
+  const r=await fetch('/api/logout',{method:'POST',headers:{'x-admin-token':token}});
+  const j=await r.json();
+  if(j.error){ alert(j.error); return; }
+  document.getElementById('codeBox').style.display='none';
+  refresh();
+}
+refresh(); setInterval(refresh, 8000);
+</script>
+</body>
+</html>

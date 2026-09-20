@@ -1,0 +1,20 @@
+{
+  "name": "boxxax-md-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp MD bot with web pairing - link your own number, bot activates",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "latest",
+    "express": "^4.19.2",
+    "https-proxy-agent": "^7.0.6",
+    "pino": "^9.4.0",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.34.1"
+  }
+}

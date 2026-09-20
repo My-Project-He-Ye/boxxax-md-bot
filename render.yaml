@@ -1,0 +1,14 @@
+# ─── BOXXAXMD · Render one-click deploy ──────────
+# Render → New → Blueprint → repo select karein, ye file khud sab set kar degi.
+services:
+  - type: web
+    name: boxxax-md-bot
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: OWNER_NUMBER
+        sync: false # Render dashboard par apna number dalein, masalan 923001234567
+      # NOTE: PORT Render khud inject karta hai (config.js process.env.PORT use karta hai) — yahan hardcode mat karna.
