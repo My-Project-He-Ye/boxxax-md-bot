@@ -41,6 +41,11 @@ let sock = null;
 let authState = null; // creds/state module scope mein — /api/pair yahi se check karega
 let starting = false;
 let lastPairingCode = null;
+let lastCodeAt = 0;        // aakhri code kab issue hua (tez dobara-click guard)
+let cooldownUntil = 0;     // 401 block ke baad WhatsApp temp-block khatam hone ka waqt
+let blockCount = 0;        // 401 blocks ki ginti — har block par cooldown double
+let lastCloseAt = 0;
+let failStreak = 0;        // lagatar quick closes (reconnect storm guard)
 
 // Logout endpoint ki hifazat ke liye random admin token (sirf server logs mein)
 const ADMIN_TOKEN = crypto.randomBytes(16).toString('hex');
@@ -75,6 +80,9 @@ async function connectWA() {
       if (connection === 'open') {
         log.info(`[wa] Connected as ${sock.user?.id}`);
         lastPairingCode = null;
+        failStreak = 0;
+        blockCount = 0;
+        cooldownUntil = 0;
       }
       if (connection === 'close') {
         const code = lastDisconnect?.error?.output?.statusCode;
@@ -82,13 +90,29 @@ async function connectWA() {
         log.warn({ code, loggedOut }, '[wa] connection closed');
         sock = null;
         starting = false;
+        const now = Date.now();
+        const quickClose = now - lastCloseAt < 15000;
+        lastCloseAt = now;
+        failStreak = quickClose ? failStreak + 1 : 0;
         if (loggedOut) {
           // Session khatam — purani session saaf karo taake dobara pair ho sake
           try { fs.rmSync(config.sessionDir, { recursive: true, force: true }); } catch {}
           authState = null;
-          log.warn('[wa] Logged out — session cleared. Pair dobara karein.');
+          // WhatsApp ne pairing attempts par TEMPORARY BLOCK lagaya (401).
+          // Foran dobara try karne se block LAMBA hota hai — is liye cooldown.
+          blockCount += 1;
+          const mins = Math.min(20 * Math.pow(2, blockCount - 1), 80);
+          cooldownUntil = now + mins * 60 * 1000;
+          log.warn(`[wa] 401 block #${blockCount} — ${mins} min cooldown. Us se pehle pair mat karein.`);
+          setTimeout(() => { if (Date.now() >= cooldownUntil - 1000) connectWA(); }, mins * 60 * 1000 + 5000);
         } else {
-          setTimeout(connectWA, 3000); // auto-reconnect
+          // Unpaired socket ka idle-close (408) normal hai — lekin code issue
+          // ke foran baad ya lagatar failures par WhatsApp ko spam mat karo.
+          const sinceCode = now - lastCodeAt;
+          let delay = 3000;
+          if (sinceCode < 3 * 60 * 1000) delay = 30000;
+          if (failStreak >= 3) delay = Math.max(delay, 30000);
+          setTimeout(connectWA, delay);
         }
       }
     });
@@ -105,14 +129,36 @@ async function connectWA() {
 }
 
 // --- API -----------------------------------------------------
+
+// Socket tab tak wait karo jab tak WhatsApp ka WS waqai OPEN na ho.
+// Pairing code sirf live socket par mangwana chahiye — warna "Connection Closed".
+async function waitForOpenSocket(timeoutMs = 25000) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < timeoutMs) {
+    if (sock?.ws?.isOpen) return sock;
+    if (!sock && !starting) connectWA();
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  return sock?.ws?.isOpen ? sock : null;
+}
+
+function cooldownInfo() {
+  const ms = Math.max(0, cooldownUntil - Date.now());
+  return { cooldownSeconds: Math.ceil(ms / 1000), coolingDown: ms > 0 };
+}
+
 app.get('/api/status', (req, res) => {
   const connected = !!(sock && sock.user);
+  const cd = cooldownInfo();
   res.json({
     connected,
     user: sock?.user?.id || null,
     botName: config.botName,
     needsPairing: !connected,
     hasOwner: !!config.owner,
+    canPair: !connected && !cd.coolingDown,
+    cooldownSeconds: cd.cooldownSeconds,
+    socketLive: !!(sock?.ws?.isOpen),
   });
 });
 
@@ -130,19 +176,44 @@ app.post('/api/pair', async (req, res) => {
       if (a !== b) return res.status(403).json({ error: 'Ye bot sirf owner number se pair ho sakta hai.' });
     }
     if (sock && sock.user) return res.json({ alreadyConnected: true, user: sock.user.id });
-    if (!sock) await connectWA();
-    for (let i = 0; i < 20 && !sock; i++) await new Promise((r) => setTimeout(r, 500));
-    if (!sock) return res.status(500).json({ error: 'WhatsApp se connect nahi ho saka, dobara try karein.' });
+
+    // WhatsApp temp-block (401) ke baad cooldown — is dauran code mangwana
+    // block ko AUR lamba karta hai. UI countdown dikhayega.
+    const now = Date.now();
+    const cd = cooldownInfo();
+    if (cd.coolingDown) {
+      const mins = Math.ceil(cd.cooldownSeconds / 60);
+      return res.status(429).json({
+        error: `WhatsApp ne temporary rok lagayi hai (tez koshishon ki wajah se). ${mins} min ruk kar SIRF EK BAAR try karein.`,
+        cooldownSeconds: cd.cooldownSeconds,
+      });
+    }
+
+    // 45 second ke andar dobara click — pehla code abhi valid hai, wahi do
+    if (lastPairingCode && now - lastCodeAt < 45000) {
+      return res.json({ code: lastPairingCode, reused: true, expiresIn: 75 });
+    }
+
+    if (!sock) connectWA();
+    const ready = await waitForOpenSocket(25000);
+    if (!ready) {
+      return res.status(503).json({ error: 'WhatsApp link abhi tayar nahi ho saka — 10 second ruk kar dobara dabayein.' });
+    }
 
     if (authState?.creds?.registered) return res.json({ alreadyConnected: true });
 
     const code = await sock.requestPairingCode(number);
     lastPairingCode = code;
+    lastCodeAt = Date.now();
     log.info({ number: number.slice(0, 4) + '***' }, '[wa] pairing code issued');
-    res.json({ code });
+    res.json({ code, expiresIn: 75 });
   } catch (e) {
     log.error(e, '[wa] pairing failed');
-    res.status(500).json({ error: 'Pairing code nahi mil saka: ' + (e.message || 'unknown error') });
+    const m = e.message || '';
+    const friendly = /Connection Closed|428|Precondition/i.test(m)
+      ? 'WhatsApp link abhi tayar nahi — 10 second ruk kar dobara dabayein (button ko baar-baar mat dabayein).'
+      : 'Pairing code nahi mil saka: ' + (m || 'unknown error');
+    res.status(500).json({ error: friendly });
   }
 });
 
@@ -160,8 +231,29 @@ app.post('/api/logout', async (req, res) => {
 app.get('/api/health', (req, res) => res.json({ ok: true, bot: config.botName }));
 
 // --- boot ----------------------------------------------------
+// Restart ke baad bhi pichli 401 block ka cooldown lagu rahe:
+// bot.log mein aakhri "Logged out" ka waqt nikalo aur 20 min cooldown lagao.
+try {
+  const logTxt = fs.readFileSync(path.join(__dirname, 'bot.log'), 'utf8');
+  const lines = logTxt.trim().split('\n');
+  for (let i = lines.length - 1; i >= 0; i--) {
+    try {
+      const o = JSON.parse(lines[i]);
+      if (o && o.msg === '[wa] Logged out — session cleared. Pair dobara karein.' && o.time) {
+        blockCount = 1;
+        cooldownUntil = Math.max(cooldownUntil, o.time + 20 * 60 * 1000);
+        if (cooldownUntil > Date.now()) {
+          log.warn(`[wa] pichli 401 block — cooldown ${new Date(cooldownUntil).toLocaleString()} tak`);
+          setTimeout(() => { if (Date.now() >= cooldownUntil - 1000) connectWA(); }, cooldownUntil - Date.now() + 5000);
+        }
+        break;
+      }
+    } catch {}
+  }
+} catch {}
+
 app.listen(config.port, () => {
   log.info(`[web] Pairing page: http://localhost:${config.port}`);
   log.info('[web] ADMIN TOKEN (logout ke liye — kisi ko na dein): ' + ADMIN_TOKEN);
-  connectWA();
+  if (Date.now() >= cooldownUntil) connectWA(); // cooldown chal raha ho to socket baad mein khud jud jayega
 });

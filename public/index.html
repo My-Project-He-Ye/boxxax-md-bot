@@ -25,7 +25,7 @@
   .card{
     position:relative; z-index:1;
     background:rgba(6,37,41,.82); border:1px solid rgba(80,232,244,.25);
-    border-radius:24px; padding:36px 32px; max-width:460px; width:100%;
+    border-radius:24px; padding:36px 32px; max-width:480px; width:100%;
     box-shadow:0 0 70px rgba(80,232,244,.12), inset 0 1px 0 rgba(199,248,254,.08);
     backdrop-filter:blur(12px); animation:rise .6s ease both;
   }
@@ -44,6 +44,9 @@
   .dot{width:10px;height:10px;border-radius:50%;background:#ffb020;box-shadow:0 0 10px #ffb020;animation:pulse 1.6s infinite}
   .dot.on{background:#3dff88;box-shadow:0 0 10px #3dff88;animation:none}
   @keyframes pulse{50%{opacity:.4}}
+  .cooldown{display:none;text-align:center;font-size:14px;margin-bottom:18px;padding:14px;border-radius:14px;
+    background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.35);color:#ffd58a;line-height:1.7}
+  .cooldown b{font-family:'Space Grotesk',sans-serif;font-size:22px;color:#ffb020;letter-spacing:1px}
   label{font-size:13px;color:var(--mut);display:block;margin-bottom:8px}
   input{width:100%;padding:15px 16px;border-radius:14px;border:1px solid rgba(80,232,244,.3);
     background:#02181b;color:var(--txt);font-size:17px;letter-spacing:1px;outline:none;margin-bottom:14px;transition:.2s}
@@ -53,17 +56,20 @@
     font-weight:700;font-size:16px;font-family:'Space Grotesk',sans-serif;transition:.2s}
   button:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(80,232,244,.35)}
   button:active{transform:none}
-  button:disabled{opacity:.5;cursor:wait;transform:none}
+  button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
   .code-box{display:none;text-align:center;margin-top:22px;padding:22px 18px;
     border:1px dashed rgba(80,232,244,.5);border-radius:16px;background:rgba(80,232,244,.05);animation:rise .4s ease both}
-  .code{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;letter-spacing:12px;color:var(--cyan);
+  .code{font-family:'Space Grotesk',sans-serif;font-size:46px;font-weight:700;letter-spacing:10px;color:var(--cyan);
     margin:10px 0;text-shadow:0 0 24px rgba(80,232,244,.55)}
+  .timer{font-family:'Space Grotesk',sans-serif;font-size:15px;color:#ffd58a;margin-bottom:6px}
   .copy{background:transparent;border:1px solid rgba(80,232,244,.4);color:var(--cyan);
     font-size:13px;padding:8px 18px;width:auto;margin-top:4px}
   .steps{text-align:left;font-size:13.5px;color:var(--lc);line-height:2;margin-top:14px;
     background:rgba(2,24,27,.5);border-radius:12px;padding:14px 16px}
   .steps b{color:var(--cyan)}
-  .err{display:none;color:#ff9a9a;font-size:13px;margin-top:12px;text-align:center;
+  .note{font-size:12.5px;color:#ffd58a;margin-top:12px;line-height:1.7;
+    background:rgba(255,176,32,.07);border:1px solid rgba(255,176,32,.25);border-radius:10px;padding:10px 12px}
+  .err{display:none;color:#ff9a9a;font-size:13px;margin-top:12px;text-align:center;line-height:1.6;
     background:rgba(255,100,100,.08);border:1px solid rgba(255,100,100,.25);border-radius:10px;padding:10px}
   .logout{background:transparent;border:1px solid rgba(255,138,138,.4);color:#ff8a8a;
     margin-top:14px;font-size:14px;padding:11px;font-family:'Inter',sans-serif;font-weight:500}
@@ -90,14 +96,22 @@
 
   <div class="status"><span class="dot" id="dot"></span><span id="statusText">Checking...</span></div>
 
+  <div class="cooldown" id="cooldownBox">
+    ⏳ <b>WhatsApp ne temporary rok lagayi hai</b><br>
+    <span id="cooldownMsg">Tez koshishon ki wajah se. Thoda ruk jayein:</span><br>
+    <b id="cooldownTimer">--:--</b><br>
+    <span style="font-size:12px;color:var(--mut)">Waqt khatam hone par button khud active ho jayega — tab SIRF EK BAAR dabayein.</span>
+  </div>
+
   <div id="pairForm">
     <label>WhatsApp number (country code ke saath, bina + ke)</label>
-    <input id="number" type="tel" placeholder="923001234567" inputmode="numeric" autocomplete="tel">
+    <input id="number" type="tel" placeholder="923001234567" value="923448072653" inputmode="numeric" autocomplete="tel">
     <button id="pairBtn" onclick="getCode()">Pairing Code Hasil Karein</button>
     <p class="err" id="err"></p>
 
     <div class="code-box" id="codeBox">
-      <div style="font-size:13px;color:var(--mut)">Aapka pairing code:</div>
+      <div class="timer" id="codeTimer">⏱ 75</div>
+      <div style="font-size:13px;color:var(--mut)">Aapka pairing code (sirf yahan dikhega):</div>
       <div class="code" id="code">--------</div>
       <button class="copy" onclick="copyCode()">📋 Copy Code</button>
       <div class="steps">
@@ -105,8 +119,10 @@
         1️⃣ WhatsApp kholein → <b>⋮ Menu → Linked devices</b><br>
         2️⃣ <b>Link a device</b> dabayein<br>
         3️⃣ Neeche <b>"Link with phone number instead"</b> chunein<br>
-        4️⃣ Upar wala <b>8-digit code</b> daal dein ✅
+        4️⃣ Upar wala <b>8-digit code</b> type kar dein ✅
       </div>
+      <div class="note">⚠️ <b>WhatsApp aapko koi message NAHI bhejega</b> — code SIRF isi page par nazar aayega. Ise <b>75 second ke andar</b> WhatsApp mein type karna hai, warna expire ho jayega.</div>
+      <button class="copy" id="newCodeBtn" style="display:none;margin-top:12px" onclick="getCode(true)">🔄 Naya Code Lo</button>
     </div>
 
     <div class="warn">⚠️ Ye unofficial tareeqa hai — apne <b>main number</b> ki jagah <b>second number</b> use karna zyada safe hai.</div>
@@ -119,30 +135,83 @@
     <button class="logout" onclick="logout()">Logout / Dobara Pair Karein</button>
   </div>
 
-  <p class="foot"><b>BOXXAXMD</b> v2.0 · Apna number, apna bot</p>
+  <p class="foot"><b>BOXXAXMD</b> v2.1 · Apna number, apna bot</p>
 </div>
 
 <script>
+let cooldownEndsAt = 0;
+let codeTimerInt = null;
+
+function fmt(s){ s=Math.max(0,Math.floor(s)); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+
 async function refresh(){
   try{
     const s = await (await fetch('/api/status')).json();
     const dot = document.getElementById('dot'), t = document.getElementById('statusText');
+    const cdBox = document.getElementById('cooldownBox');
+    const btn = document.getElementById('pairBtn');
     if(s.connected){
       dot.classList.add('on'); t.textContent = 'Connected ✓';
       document.getElementById('pairForm').style.display='none';
       document.getElementById('connectedBox').style.display='block';
       document.getElementById('connUser').textContent = 'Linked: ' + (s.user||'');
+      cdBox.style.display='none';
+      stopCodeTimer();
     } else {
-      dot.classList.remove('on'); t.textContent = 'Pairing ka intezar...';
+      dot.classList.remove('on');
       document.getElementById('pairForm').style.display='block';
       document.getElementById('connectedBox').style.display='none';
+      if(s.cooldownSeconds > 0){
+        cooldownEndsAt = Date.now() + s.cooldownSeconds*1000;
+        cdBox.style.display='block';
+        btn.disabled = true;
+        t.textContent = 'WhatsApp block — cooldown...';
+      } else {
+        cooldownEndsAt = 0;
+        cdBox.style.display='none';
+        if(!btn.dataset.busy) btn.disabled = false;
+        t.textContent = s.socketLive ? 'Pairing ke liye tayar ✓' : 'Pairing ka intezar...';
+      }
     }
   }catch{ document.getElementById('statusText').textContent = 'Server se rabta nahi'; }
 }
-async function getCode(){
+
+// Cooldown countdown — har second update
+setInterval(()=>{
+  if(cooldownEndsAt > Date.now()){
+    document.getElementById('cooldownTimer').textContent = fmt((cooldownEndsAt-Date.now())/1000);
+  } else if(cooldownEndsAt){
+    cooldownEndsAt = 0;
+    document.getElementById('cooldownBox').style.display='none';
+    const btn=document.getElementById('pairBtn');
+    if(!btn.dataset.busy){ btn.disabled=false; }
+    refresh();
+  }
+},1000);
+
+function startCodeTimer(sec){
+  stopCodeTimer();
+  let left = sec;
+  const el = document.getElementById('codeTimer');
+  document.getElementById('newCodeBtn').style.display='none';
+  el.textContent = '⏱ '+left;
+  codeTimerInt = setInterval(()=>{
+    left--;
+    if(left<=0){
+      stopCodeTimer();
+      el.textContent = '⏱ Code expire ho gaya';
+      document.getElementById('newCodeBtn').style.display='inline-block';
+    } else el.textContent = '⏱ '+left;
+  },1000);
+}
+function stopCodeTimer(){ if(codeTimerInt){ clearInterval(codeTimerInt); codeTimerInt=null; } }
+
+async function getCode(force){
   const btn=document.getElementById('pairBtn'), err=document.getElementById('err');
   const number=document.getElementById('number').value.trim();
-  err.style.display='none'; btn.disabled=true; btn.textContent='Code mangwa raha hoon...';
+  err.style.display='none';
+  btn.dataset.busy='1'; btn.disabled=true; btn.textContent='Code mangwa raha hoon...';
+  document.getElementById('codeBox').style.display='none';
   try{
     const r = await fetch('/api/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({number})});
     const j = await r.json();
@@ -150,8 +219,10 @@ async function getCode(){
     if(j.alreadyConnected){ refresh(); return; }
     document.getElementById('code').textContent = j.code;
     document.getElementById('codeBox').style.display='block';
+    startCodeTimer(j.expiresIn || 75);
+    if(j.reused) { err.textContent='ℹ️ '+j.note; err.style.display='block'; }
   }catch(e){ err.textContent=e.message; err.style.display='block'; }
-  btn.disabled=false; btn.textContent='Pairing Code Hasil Karein';
+  finally{ delete btn.dataset.busy; btn.disabled = cooldownEndsAt > Date.now(); btn.textContent='Pairing Code Hasil Karein'; }
 }
 function copyCode(){
   const c=document.getElementById('code').textContent;
@@ -164,6 +235,7 @@ async function logout(){
   const r=await fetch('/api/logout',{method:'POST',headers:{'x-admin-token':token}});
   const j=await r.json();
   if(j.error){ alert(j.error); return; }
+  stopCodeTimer();
   document.getElementById('codeBox').style.display='none';
   refresh();
 }
