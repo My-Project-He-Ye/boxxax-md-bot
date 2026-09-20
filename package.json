@@ -7,11 +7,11 @@
     "start": "node index.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
     "@upstash/redis": "^1.38.4",
-    "@whiskeysockets/baileys": "latest",
+    "@whiskeysockets/baileys": "7.0.0-rc14",
     "express": "^4.19.2",
     "https-proxy-agent": "^7.0.6",
     "pino": "^9.4.0",

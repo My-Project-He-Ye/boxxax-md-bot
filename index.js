@@ -15,7 +15,7 @@ const {
   default: makeWASocket,
   useMultiFileAuthState,
   DisconnectReason,
-  fetchLatestBaileysVersion,
+  fetchLatestWaWebVersion,
   makeCacheableSignalKeyStore,
 } = require('@whiskeysockets/baileys');
 const { useRedisAuthState, makeRedisClient, redisConfigured } = require('./lib/redis-auth');
@@ -91,7 +91,10 @@ async function connectWA() {
   try {
     const { state, saveCreds } = await getAuthState();
     authState = state;
-    const { version } = await fetchLatestBaileysVersion();
+    // NOTE: fetchLatestWaWebVersion (asal current WA Web version) istemal karo —
+    // fetchLatestBaileysVersion purana version deta hai jis par WhatsApp
+    // "Couldn't link device" keh kar pairing refuse kar deta hai.
+    const { version } = await fetchLatestWaWebVersion();
 
     sock = makeWASocket({
       version,
