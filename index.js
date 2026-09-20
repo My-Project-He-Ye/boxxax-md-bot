@@ -17,6 +17,7 @@ const {
   DisconnectReason,
   fetchLatestWaWebVersion,
   makeCacheableSignalKeyStore,
+  Browsers,
 } = require('@whiskeysockets/baileys');
 const { useRedisAuthState, makeRedisClient, redisConfigured } = require('./lib/redis-auth');
 
@@ -95,6 +96,11 @@ async function connectWA() {
     // fetchLatestBaileysVersion purana version deta hai jis par WhatsApp
     // "Couldn't link device" keh kar pairing refuse kar deta hai.
     const { version } = await fetchLatestWaWebVersion();
+    // Pairing ke waqt WhatsApp browser fingerprint validate karta hai —
+    // custom platform name (jaise bot ka naam) par "Couldn't link device"
+    // aata hai. Is liye Baileys ka default macOS/Chrome fingerprint istemal karo.
+    const browser = Browsers.macOS('Chrome');
+    log.info(`[wa] version ${version.join('.')} | browser ${browser.join(' ')}`);
 
     sock = makeWASocket({
       version,
@@ -104,7 +110,7 @@ async function connectWA() {
       },
       printQRInTerminal: false,
       logger: pino({ level: 'silent' }),
-      browser: [config.botName, 'Chrome', '1.0.0'],
+      browser,
       markOnlineOnConnect: true,
       ...(proxyAgent ? { agent: proxyAgent } : {}),
     });
