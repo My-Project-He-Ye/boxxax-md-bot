@@ -1,0 +1,63 @@
+{"level":30,"time":1789923190472,"pid":2285,"hostname":"htch-runtime","msg":"[net] using HTTPS proxy for WhatsApp socket"}
+{"level":30,"time":1789923190478,"pid":2285,"hostname":"htch-runtime","msg":"[web] Pairing page: http://localhost:3000"}
+{"level":30,"time":1789923190478,"pid":2285,"hostname":"htch-runtime","msg":"[web] ADMIN TOKEN (logout ke liye — kisi ko na dein): 365edbfe2976d110a919f37b39abbff3"}
+{"level":30,"time":1789923191292,"pid":2285,"hostname":"htch-runtime","connection":"connecting","msg":"[wa] connection.update"}
+{"level":30,"time":1789923192443,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923252443,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923272444,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923292448,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923312448,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923332451,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923352772,"pid":2285,"hostname":"htch-runtime","connection":"close","msg":"[wa] connection.update"}
+{"level":40,"time":1789923352772,"pid":2285,"hostname":"htch-runtime","code":408,"loggedOut":false,"msg":"[wa] connection closed"}
+{"level":30,"time":1789923356205,"pid":2285,"hostname":"htch-runtime","connection":"connecting","msg":"[wa] connection.update"}
+{"level":30,"time":1789923358231,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923387107,"pid":2285,"hostname":"htch-runtime","number":"9234***","msg":"[wa] pairing code issued"}
+{"level":30,"time":1789923418233,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923438236,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923458238,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923471156,"pid":2285,"hostname":"htch-runtime","number":"9234***","msg":"[wa] pairing code issued"}
+{"level":30,"time":1789923478239,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923498241,"pid":2285,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789923518680,"pid":2285,"hostname":"htch-runtime","connection":"close","msg":"[wa] connection.update"}
+{"level":40,"time":1789923518680,"pid":2285,"hostname":"htch-runtime","code":408,"loggedOut":false,"msg":"[wa] connection closed"}
+{"level":30,"time":1789923522134,"pid":2285,"hostname":"htch-runtime","connection":"connecting","msg":"[wa] connection.update"}
+{"level":30,"time":1789923524324,"pid":2285,"hostname":"htch-runtime","connection":"close","msg":"[wa] connection.update"}
+{"level":40,"time":1789923524324,"pid":2285,"hostname":"htch-runtime","code":401,"loggedOut":true,"msg":"[wa] connection closed"}
+{"level":40,"time":1789923524324,"pid":2285,"hostname":"htch-runtime","msg":"[wa] Logged out — session cleared. Pair dobara karein."}
+{"level":30,"time":1789923537099,"pid":2285,"hostname":"htch-runtime","connection":"connecting","msg":"[wa] connection.update"}
+{"level":50,"time":1789923537131,"pid":2285,"hostname":"htch-runtime","err":{"type":"Error","message":"Connection Closed","stack":"Error: Connection Closed\n    at sendRawMessage (file:///home/hatch/workspace/whatsapp-md-bot/node_modules/@whiskeysockets/baileys/lib/Socket/socket.js:60:19)\n    at sendNode (file:///home/hatch/workspace/whatsapp-md-bot/node_modules/@whiskeysockets/baileys/lib/Socket/socket.js:79:16)\n    at Object.requestPairingCode (file:///home/hatch/workspace/whatsapp-md-bot/node_modules/@whiskeysockets/baileys/lib/Socket/socket.js:607:15)\n    at async /home/hatch/workspace/whatsapp-md-bot/index.js:139:18","data":null,"isBoom":true,"isServer":false,"output":{"statusCode":428,"payload":{"statusCode":428,"error":"Precondition Required","message":"Connection Closed"},"headers":{}}},"msg":"[wa] pairing failed"}
+{"level":30,"time":1789923541020,"pid":2285,"hostname":"htch-runtime","connection":"close","msg":"[wa] connection.update"}
+{"level":40,"time":1789923541020,"pid":2285,"hostname":"htch-runtime","code":428,"loggedOut":false,"msg":"[wa] connection closed"}
+{"level":30,"time":1789923544407,"pid":2285,"hostname":"htch-runtime","connection":"connecting","msg":"[wa] connection.update"}
+{"level":30,"time":1789923548317,"pid":2285,"hostname":"htch-runtime","connection":"close","msg":"[wa] connection.update"}
+{"level":40,"time":1789923548317,"pid":2285,"hostname":"htch-runtime","code":401,"loggedOut":true,"msg":"[wa] connection closed"}
+{"level":40,"time":1789923548317,"pid":2285,"hostname":"htch-runtime","msg":"[wa] Logged out — session cleared. Pair dobara karein."}
+{"level":30,"time":1789923691601,"pid":3060,"hostname":"htch-runtime","msg":"[net] using HTTPS proxy for WhatsApp socket"}
+{"level":40,"time":1789923691637,"pid":3060,"hostname":"htch-runtime","msg":"[wa] pichli 401 block — cooldown 9/20/2026, 10:19:08 AM tak"}
+{"level":30,"time":1789923691641,"pid":3060,"hostname":"htch-runtime","msg":"[web] Pairing page: http://localhost:3000"}
+{"level":30,"time":1789923691641,"pid":3060,"hostname":"htch-runtime","msg":"[web] ADMIN TOKEN (logout ke liye — kisi ko na dein): ff741d5aff60e4336f88e10cc3640c0d"}
+{"level":30,"time":1789924753877,"pid":3060,"hostname":"htch-runtime","connection":"connecting","msg":"[wa] connection.update"}
+{"level":30,"time":1789924755230,"pid":3060,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789924785358,"pid":3060,"hostname":"htch-runtime","number":"9234***","msg":"[wa] pairing code issued"}
+{"level":30,"time":1789924815230,"pid":3060,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789924835231,"pid":3060,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789924855232,"pid":3060,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789924875233,"pid":3060,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789924895236,"pid":3060,"hostname":"htch-runtime","msg":"[wa] connection.update"}
+{"level":30,"time":1789924915632,"pid":3060,"hostname":"htch-runtime","connection":"close","msg":"[wa] connection.update"}
+{"level":40,"time":1789924915633,"pid":3060,"hostname":"htch-runtime","code":408,"loggedOut":false,"msg":"[wa] connection closed"}
+{"level":30,"time":1789924946126,"pid":3060,"hostname":"htch-runtime","connection":"connecting","msg":"[wa] connection.update"}
+{"level":30,"time":1789924946746,"pid":3060,"hostname":"htch-runtime","connection":"close","msg":"[wa] connection.update"}
+{"level":40,"time":1789924946746,"pid":3060,"hostname":"htch-runtime","code":428,"loggedOut":false,"msg":"[wa] connection closed"}
+{"level":30,"time":1789924977140,"pid":3060,"hostname":"htch-runtime","connection":"connecting","msg":"[wa] connection.update"}
+{"level":30,"time":1789924978882,"pid":3060,"hostname":"htch-runtime","connection":"close","msg":"[wa] connection.update"}
+{"level":40,"time":1789924978883,"pid":3060,"hostname":"htch-runtime","code":428,"loggedOut":false,"msg":"[wa] connection closed"}
+{"level":30,"time":1789924982464,"pid":3060,"hostname":"htch-runtime","connection":"connecting","msg":"[wa] connection.update"}
+{"level":30,"time":1789924984757,"pid":3060,"hostname":"htch-runtime","connection":"close","msg":"[wa] connection.update"}
+{"level":40,"time":1789924984757,"pid":3060,"hostname":"htch-runtime","code":401,"loggedOut":true,"msg":"[wa] connection closed"}
+{"level":40,"time":1789924984758,"pid":3060,"hostname":"htch-runtime","msg":"[wa] 401 block #2 — 40 min cooldown. Us se pehle pair mat karein."}
+{"level":30,"time":1789925076239,"pid":4699,"hostname":"htch-runtime","msg":"[net] using HTTPS proxy for WhatsApp socket"}
+{"level":40,"time":1789925076260,"pid":4699,"hostname":"htch-runtime","msg":"[wa] pichli 401 block #2 — cooldown 9/20/2026, 11:03:04 AM tak"}
+{"level":30,"time":1789925076262,"pid":4699,"hostname":"htch-runtime","msg":"[web] Pairing page: http://localhost:3000"}
+{"level":30,"time":1789925076262,"pid":4699,"hostname":"htch-runtime","msg":"[web] ADMIN TOKEN (logout ke liye — kisi ko na dein): 2a13df2cece0e8d41e563a7135133c8b"}

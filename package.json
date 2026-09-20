@@ -10,6 +10,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@upstash/redis": "^1.38.4",
     "@whiskeysockets/baileys": "latest",
     "express": "^4.19.2",
     "https-proxy-agent": "^7.0.6",

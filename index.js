@@ -18,6 +18,7 @@ const {
   fetchLatestBaileysVersion,
   makeCacheableSignalKeyStore,
 } = require('@whiskeysockets/baileys');
+const { useRedisAuthState, makeRedisClient, redisConfigured } = require('./lib/redis-auth');
 
 const log = pino({ level: 'info' });
 
@@ -58,12 +59,37 @@ setInterval(() => {
 // Logout endpoint ki hifazat ke liye random admin token (sirf server logs mein)
 const ADMIN_TOKEN = crypto.randomBytes(16).toString('hex');
 
+let clearAuthState = null; // session saaf karne wala fn (redis ya file — jo active ho)
+
+// Auth state: Upstash Redis (Render, persistent) preferred —
+// UPSTASH_REDIS_REST_URL/TOKEN na hon to local file auth fallback (default).
+async function getAuthState() {
+  if (redisConfigured()) {
+    log.info('[auth] using Upstash Redis auth state');
+    const { state, saveCreds, clearAll } = await useRedisAuthState(makeRedisClient());
+    clearAuthState = clearAll;
+    return { state, saveCreds };
+  }
+  log.info('[auth] using local file auth state');
+  clearAuthState = async () => {
+    try { fs.rmSync(config.sessionDir, { recursive: true, force: true }); } catch {}
+  };
+  return useMultiFileAuthState(config.sessionDir);
+}
+
+// Session saaf karo (logout / 401 par) — redis keys bhi delete hon.
+async function clearSession() {
+  try { if (clearAuthState) await clearAuthState(); }
+  catch (e) { log.warn({ err: String(e) }, '[auth] session clear failed'); }
+  authState = null;
+}
+
 // --- WhatsApp connection ------------------------------------
 async function connectWA() {
   if (starting) return;
   starting = true;
   try {
-    const { state, saveCreds } = await useMultiFileAuthState(config.sessionDir);
+    const { state, saveCreds } = await getAuthState();
     authState = state;
     const { version } = await fetchLatestBaileysVersion();
 
@@ -82,7 +108,7 @@ async function connectWA() {
 
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', (u) => {
+    sock.ev.on('connection.update', async (u) => {
       const { connection, lastDisconnect } = u;
       log.info({ connection }, '[wa] connection.update');
       if (connection === 'open') {
@@ -104,8 +130,8 @@ async function connectWA() {
         failStreak = quickClose ? failStreak + 1 : 0;
         if (loggedOut) {
           // Session khatam — purani session saaf karo taake dobara pair ho sake
-          try { fs.rmSync(config.sessionDir, { recursive: true, force: true }); } catch {}
-          authState = null;
+          // (redis par ho to redis keys bhi delete hoti hain)
+          await clearSession();
           // WhatsApp ne pairing attempts par TEMPORARY BLOCK lagaya (401).
           // Foran dobara try karne se block LAMBA hota hai — is liye cooldown.
           blockCount += 1;
@@ -257,9 +283,8 @@ app.post('/api/logout', async (req, res) => {
   const token = req.headers['x-admin-token'] || req.query.token;
   if (token !== ADMIN_TOKEN) return res.status(401).json({ error: 'Admin token ghalat hai.' });
   try { if (sock) await sock.logout(); } catch {}
-  try { fs.rmSync(config.sessionDir, { recursive: true, force: true }); } catch {}
+  await clearSession();
   sock = null;
-  authState = null;
   res.json({ ok: true });
 });
 

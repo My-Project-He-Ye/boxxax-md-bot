@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BOXXAXMD — Pairing</title>
+<title>BOXXAXMD — WhatsApp Bot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -11,48 +11,34 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--tx);font-family:Inter,system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
     background-image:radial-gradient(600px 300px at 20% 10%,rgba(80,232,244,.08),transparent),radial-gradient(500px 260px at 85% 85%,rgba(109,213,196,.07),transparent);}
-  .card{background:rgba(6,37,41,.85);border:1px solid rgba(80,232,244,.18);border-radius:24px;padding:40px 34px;max-width:440px;width:100%;text-align:center;backdrop-filter:blur(12px);box-shadow:0 0 60px rgba(80,232,244,.08)}
-  h1{font-family:'Space Grotesk',sans-serif;font-size:28px;letter-spacing:2px;background:linear-gradient(90deg,var(--cyan),var(--mint));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:8px}
-  p{color:var(--mut);font-size:14px;line-height:1.7;margin:10px 0}
-  .spin{width:46px;height:46px;border:3px solid rgba(80,232,244,.15);border-top-color:var(--cyan);border-radius:50%;margin:22px auto;animation:sp 1s linear infinite}
-  @keyframes sp{to{transform:rotate(360deg)}}
-  .btn{display:inline-block;margin-top:14px;background:linear-gradient(90deg,var(--cyan),var(--mint));color:#001619;font-weight:600;padding:13px 30px;border-radius:999px;text-decoration:none;font-size:15px}
-  .url{word-break:break-all;color:var(--lc);font-size:12px;margin-top:12px}
-  .hidden{display:none}
+  .card{background:rgba(6,37,41,.85);border:1px solid rgba(80,232,244,.18);border-radius:24px;padding:40px 34px;max-width:460px;width:100%;text-align:center;backdrop-filter:blur(12px);box-shadow:0 0 60px rgba(80,232,244,.08)}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:30px;letter-spacing:3px;background:linear-gradient(90deg,var(--cyan),var(--mint));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:6px}
+  .tag{color:var(--mut);font-size:13px;letter-spacing:1px;margin-bottom:22px}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint);margin-right:7px;animation:pl 2s infinite}
+  @keyframes pl{50%{opacity:.4}}
+  .status{color:var(--mint);font-size:14px;font-weight:600;margin-bottom:18px}
+  ol{text-align:left;color:var(--lc);font-size:14px;line-height:2;margin:0 auto;max-width:360px;padding-left:20px}
+  ol b{color:var(--cyan)}
+  p.note{color:var(--mut);font-size:13px;line-height:1.7;margin-top:20px}
+  .cmds{margin-top:18px;font-size:12px;color:var(--mut)}
+  .cmds span{display:inline-block;background:rgba(80,232,244,.08);border:1px solid rgba(80,232,244,.15);border-radius:999px;padding:4px 12px;margin:3px;color:var(--lc)}
 </style>
 </head>
 <body>
 <div class="card">
   <h1>BOXXAXMD</h1>
-  <div id="loading">
-    <div class="spin"></div>
-    <p>Live pairing page se jod raha hu…</p>
-  </div>
-  <div id="fallback" class="hidden">
-    <p>Auto-redirect nahi ho saka. Neeche button dabakar pairing page kholo:</p>
-    <a class="btn" id="goBtn" href="#">Pairing Page Kholo</a>
-    <div class="url" id="urlTxt"></div>
+  <div class="tag">WHATSAPP MD BOT</div>
+  <div class="status"><span class="dot"></span>Server online hai</div>
+  <ol>
+    <li>WhatsApp kholo → <b>Linked devices</b> → <b>Link a device</b></li>
+    <li><b>"Link with phone number instead"</b> dabao</li>
+    <li>Muse chat mein <b>READY</b> likho — code isi chat mein milega</li>
+    <li>Code ko <b>60 second</b> ke andar wahan type kar do</li>
+  </ol>
+  <p class="note">Pairing code ab seedha chat mein milta hai — kisi alag page ki zaroorat nahi. Ek baar link ho jaye to session save rehta hai, dobara pair nahi karna parega.</p>
+  <div class="cmds">
+    <span>.menu</span><span>.ping</span><span>.sticker</span><span>.tiktok</span><span>.ai</span><span>.vv</span>
   </div>
 </div>
-<script>
-  // Ye link HAMESHA kaam karega — asal page ka taaza pata GitHub se aata hai.
-  var SRC = 'https://raw.githubusercontent.com/My-Project-He-Ye/boxxax-md-bot/master/live-url.txt';
-  fetch(SRC + '?t=' + Date.now())
-    .then(function(r){ if(!r.ok) throw 0; return r.text(); })
-    .then(function(t){
-      var u = (t||'').trim();
-      if(!/^https:\/\//.test(u)) throw 0;
-      location.replace(u);
-    })
-    .catch(function(){
-      document.getElementById('loading').classList.add('hidden');
-      var f = document.getElementById('fallback');
-      f.classList.remove('hidden');
-      // aakhri maloom pata (tunnel restart par khud update ho jayega)
-      var last = 'https://6f795ee38a3559b5-87-81-230-107.serveousercontent.com';
-      document.getElementById('goBtn').href = last;
-      document.getElementById('urlTxt').textContent = last;
-    });
-</script>
 </body>
 </html>
