@@ -41,6 +41,9 @@ if [ -n "$URL" ]; then
   if [ "$URL" != "$OLD" ]; then
     echo "$URL" > "$URLFILE"
     echo "URL CHANGED: ${OLD:-none} -> $URL"
+    # Permanent link (boxxaxmd-pair.surge.sh) GitHub se live-url.txt parhta hai —
+    # is liye tabdeeli ko push karo taake permanent link taaza rahe.
+    (cd "$DIR" && git add live-url.txt 2>/dev/null && git commit -m "live-url update: $URL" 2>/dev/null && git push origin master 2>&1 | tail -1)
   fi
   if curl -s -m 20 "$URL/api/health" 2>/dev/null | grep -q '"ok":true'; then
     echo "PUBLIC OK: $URL"
